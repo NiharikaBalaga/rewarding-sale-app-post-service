@@ -1,0 +1,42 @@
+{
+  "name": "rewarding-sale-app-post-service",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start:prod": "cross-env NODE_ENV=production ts-node lib/app.ts",
+    "start:dev": "cross-env NODE_ENV=development ts-node-dev lib/app.ts",
+    "lint": "eslint --ext .ts --ext .js --ext .jsx . --max-warnings 0",
+    "lint:fix": "eslint --ext .ts --ext .js . --fix"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@aws-sdk/client-sns": "^3.501.0",
+    "@types/express": "^4.17.21",
+    "@types/jsonwebtoken": "^9.0.5",
+    "@types/passport": "^1.0.16",
+    "@types/passport-jwt": "^4.0.1",
+    "argon2": "^0.31.2",
+    "class-transformer": "^0.5.1",
+    "cross-env": "^7.0.3",
+    "dotenv": "^16.4.1",
+    "express": "^4.18.2",
+    "express-validator": "^7.0.1",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^8.1.1",
+    "passport": "^0.7.0",
+    "passport-jwt": "^4.0.1",
+    "ts-node": "^10.9.2"
+  },
+  "devDependencies": {
+    "@types/mongoose": "^5.11.97",
+    "@typescript-eslint/eslint-plugin": "^6.19.1",
+    "@typescript-eslint/parser": "^6.19.1",
+    "eslint": "^8.56.0",
+    "eslint-plugin-import": "^2.29.1",
+    "eslint-plugin-notice": "^0.9.10",
+    "ts-node-dev": "^2.0.0"
+  }
+}

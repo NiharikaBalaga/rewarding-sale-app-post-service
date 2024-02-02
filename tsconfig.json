@@ -1,0 +1,19 @@
+{
+  "compilerOptions": {
+    "target": "ES2019",
+    "module": "commonjs",
+    "lib": ["esnext", "dom", "DOM.Iterable"],
+    "baseUrl": ".",
+    "esModuleInterop": true,
+    "strict": true,
+    "allowJs": true,
+    "jsx": "react",
+    "resolveJsonModule": true,
+    "noEmit": true,
+    "noImplicitOverride": true,
+    "useUnknownInCatchVariables": false,
+    "strictPropertyInitialization": false,
+    "experimentalDecorators": true
+  },
+  "compileOnSave": true,
+}
