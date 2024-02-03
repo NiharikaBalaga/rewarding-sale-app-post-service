@@ -8,6 +8,7 @@ import express, { json } from 'express';
 import { routes } from './routes';
 import * as mongoose from 'mongoose';
 import fs from 'fs';
+import { SQSService } from './services/SQS';
 
 async function bootstrap() {
   if (!fs.existsSync(`.env.${env}`)) {
@@ -15,7 +16,7 @@ async function bootstrap() {
     throw Object.assign(new Error(errorMessage), { code: 'ENV_ERROR' });
   }
 
-  const requiredEnvVariables = ['MONGODB_URI_POST', 'MONGO_POST_DATABASE'];
+  const requiredEnvVariables = ['MONGODB_URI_POST', 'MONGO_POST_DATABASE', 'aws_sqs_access_key_id', 'aws_sqs_secret_access_key', 'aws_region', 'aws_sqs_queue_name', 'aws_sqs_queue_url'];
 
   const missingVariables = requiredEnvVariables.filter(variable => {
     return !process.env[variable];
@@ -41,6 +42,8 @@ async function bootstrap() {
     app.listen(PORT, async () => {
       console.log(`Post Started and Listening on PORT ${PORT} `);
     });
+    // Start SQS Polling
+    SQSService.initPoling();
   } catch (err) {
     console.log('Error in starting the server', err);
   }
