@@ -1,4 +1,5 @@
 import * as  dotEnv from 'dotenv';
+
 const env = process.env.NODE_ENV || 'development';
 dotEnv.config({
   path: `.env.${env}`,
@@ -16,7 +17,17 @@ async function bootstrap() {
     throw Object.assign(new Error(errorMessage), { code: 'ENV_ERROR' });
   }
 
-  const requiredEnvVariables = ['MONGODB_URI_POST', 'MONGO_POST_DATABASE', 'aws_sqs_access_key_id', 'aws_sqs_secret_access_key', 'aws_region', 'aws_sqs_queue_name', 'aws_sqs_queue_url'];
+  const requiredEnvVariables = [
+    'MONGODB_URI_POST',
+    'MONGO_POST_DATABASE',
+    'JWT_ACCESS_SECRET',
+    'aws_sqs_access_key_id',
+    'aws_sqs_secret_access_key',
+    'aws_region',
+    'aws_sqs_queue_name',
+    'aws_sqs_queue_url',
+    'aws_s3_access_key_id',
+    'aws_s3_secret_access_key'];
 
   const missingVariables = requiredEnvVariables.filter(variable => {
     return !process.env[variable];
@@ -52,5 +63,6 @@ async function bootstrap() {
 bootstrap().catch(error => {
   if (error.code && error.code.startsWith('ENV'))
     console.error(`Failed to start application: ${error}`);
+
   process.exit(1);
 });
