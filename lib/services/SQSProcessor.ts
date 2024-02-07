@@ -1,5 +1,6 @@
 import { Events } from './events.enum';
 import { UserService } from './User';
+import type mongoose from 'mongoose';
 
 class SQSProcessorService {
   static async ProcessSqsMessage(messages: any[]) {
@@ -27,30 +28,54 @@ class SQSProcessorService {
         messages.map(({ Body }) => {
           try {
             const parsedBody = JSON.parse(Body);
-            const parsedMessage = JSON.parse(parsedBody.Message);
-            if (parsedMessage['EVENT_TYPE']) {
-              const { EVENT_TYPE, user, userId, token, updatedUser } =
-                parsedMessage;
-              console.log(EVENT_TYPE, user, userId, token, updatedUser);
-              switch (EVENT_TYPE) {
-                case Events.userCreatedByPhone:
-                  return this._handleUserCreationByPhone(user, userId);
-                case Events.tokenBlackList:
-                  return this._handleTokenBlackListEvent(token);
-                case Events.userUpdate:
-                  return this._handleUserUpdatedEvent(updatedUser, userId);
-                default:
-                  console.warn(`Unhandled event type: ${EVENT_TYPE}`);
-                  break;
-              }
+            if (parsedBody.Message) {
+              // Message sent by SNS
+              const parsedMessage = JSON.parse(parsedBody.Message);
+              if (parsedMessage['EVENT_TYPE'])
+                return this._handleMessageEventsSentBySNS(parsedMessage);
+            } else {
+              // Message sent by Queue itself
+              if (parsedBody['EVENT_TYPE'])
+                return this._handleMessageEventsSentBySqs(parsedBody);
             }
           } catch (error) {
             console.error('Error processing SQS message:', error);
+            throw error;
           }
         }),
       );
     } catch (error) {
       console.error('Error processing SQS messages:', error);
+      throw error;
+    }
+  }
+
+  private static async _handleMessageEventsSentBySqs(parsedBody: any) {
+    const { EVENT_TYPE, postId } = parsedBody;
+    console.log('_handleMessageEventsSentBySqs', EVENT_TYPE, postId);
+    switch (EVENT_TYPE) {
+      case Events.newPost:
+        return this._handleNewPost(postId);
+      default:
+        console.warn(`Unhandled event type: ${EVENT_TYPE}`);
+        break;
+    }
+  }
+
+  private static async _handleMessageEventsSentBySNS(parsedMessage: any) {
+    const { EVENT_TYPE, user, userId, token, updatedUser } =
+      parsedMessage;
+    console.log(EVENT_TYPE, user, userId, token, updatedUser);
+    switch (EVENT_TYPE) {
+      case Events.userCreatedByPhone:
+        return this._handleUserCreationByPhone(user, userId);
+      case Events.tokenBlackList:
+        return this._handleTokenBlackListEvent(token);
+      case Events.userUpdate:
+        return this._handleUserUpdatedEvent(updatedUser, userId);
+      default:
+        console.warn(`Unhandled event type: ${EVENT_TYPE}`);
+        break;
     }
   }
   private static async _handleUserCreationByPhone(user: any, userId: string) {
@@ -78,6 +103,10 @@ class SQSProcessorService {
       console.error('_handleUserUpdatedEvent', error);
       throw error;
     }
+  }
+
+  private static async _handleNewPost(postId: mongoose.Types.ObjectId) {
+    console.log('_handleNewPost-todo', postId);
   }
 }
 

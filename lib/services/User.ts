@@ -38,6 +38,13 @@ class UserService{
   static async updateUser(userId: string, updateDto: any) {
     return this._update(userId, updateDto);
   }
+
+  public static async tokenInBlackList(accessToken: string) {
+    return UserTokenBlacklistModel.findOne({
+      token: accessToken
+    });
+  }
+
 }
 
 

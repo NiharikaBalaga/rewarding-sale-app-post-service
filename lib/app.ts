@@ -10,6 +10,7 @@ import { routes } from './routes';
 import * as mongoose from 'mongoose';
 import fs from 'fs';
 import { SQSService } from './services/SQS';
+import passport from './strategies/passport-strategy';
 
 async function bootstrap() {
   if (!fs.existsSync(`.env.${env}`)) {
@@ -41,7 +42,12 @@ async function bootstrap() {
   const PORT = process.env.PORT || 3000;
   const app = express();
   app.use(json());
-  app.use(routes);
+  app.use(passport.initialize());
+
+  // add prefix
+  const apiRouter = express.Router();
+  apiRouter.use('/post', routes); // Prefixing routes with '/post'
+  app.use('/api', apiRouter); // Prefixing all routes with '/api'
 
 
   try {

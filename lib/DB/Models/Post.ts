@@ -1,6 +1,7 @@
 import mongoose from 'mongoose';
 import type { Document, Model } from 'mongoose';
 import { PostStatus } from './post-status.enum';
+import UserModel from './User';
 
 export interface IPost extends Document {
   userId: mongoose.Types.ObjectId,
@@ -21,6 +22,7 @@ export interface IPost extends Document {
 const PostSchema: mongoose.Schema = new mongoose.Schema({
   userId: {
     type: mongoose.Types.ObjectId,
+    ref: UserModel, // Connection user collection - useful during popular operations
     required: true,
     index: true,
   },
