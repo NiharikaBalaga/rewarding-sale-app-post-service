@@ -1,6 +1,8 @@
 import type {
   DeleteMessageBatchRequestEntry,
   Message } from '@aws-sdk/client-sqs';
+import { SendMessageCommand
+} from '@aws-sdk/client-sqs';
 import { SQSClient
 } from '@aws-sdk/client-sqs';
 import {
@@ -8,6 +10,10 @@ import {
   ReceiveMessageCommand
 } from '@aws-sdk/client-sqs';
 import { SQSProcessorService } from './SQSProcessor';
+import type mongoose from 'mongoose';
+import { Events } from './events.enum';
+import { de_GetPlatformApplicationAttributesCommand } from '@aws-sdk/client-sns/dist-types/protocols/Aws_query';
+import { PostService } from './Post';
 
 class SQSService{
   private static readonly SQS = new SQSClient({
@@ -68,7 +74,7 @@ class SQSService{
         // this parameter specifies the duration (in seconds) for which the call waits for a message to arrive in the queue before returning. 20 seconds, which means if there are no messages available in the queue, the call will wait up to 20 seconds for messages to arrive before returning an empty response. This helps reduce the number of empty responses and can improve efficiency.
         WaitTimeSeconds: 20,
         // This parameter specifies the duration (in seconds) that the received messages are hidden from subsequent retrieval requests. 5 seconds, which means once a message is received, it will be hidden from other consumers for 5 seconds. This prevents other consumers from processing the same message simultaneously, ensuring that each message is processed by only one consumer.
-        VisibilityTimeout: 5,
+        VisibilityTimeout: 60,
         MessageAttributeNames: ['All'],
       });
       const { Messages } = await this.SQS.send(sqsConsumeCommand);
@@ -99,6 +105,34 @@ class SQSService{
       throw error;
     }
   }
+  private static async _sendMessageToQueue(message: string) {
+    try {
+      const params = {
+        QueueUrl: process.env.aws_sqs_queue_url,
+        MessageBody: message
+      };
+
+      await this.SQS.send(new SendMessageCommand(params));
+      console.log('Message sent to SQS queue - success');
+    } catch (error) {
+      console.error('_sendMessageToQueue-error', error);
+      throw error;
+    }
+  }
+
+  static async newPostEvent(postId: mongoose.Types.ObjectId) {
+    try {
+      await this._sendMessageToQueue(JSON.stringify({
+        postId,
+        EVENT_TYPE: Events.newPost
+      }));
+      return;
+    } catch (error) {
+      await PostService.postFailed(postId);
+      throw error;
+    }
+  }
+
 }
 
 
