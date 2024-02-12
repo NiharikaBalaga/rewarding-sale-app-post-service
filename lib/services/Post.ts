@@ -76,6 +76,22 @@ class PostService {
       return res.status(httpCodes.serverError).send('Server Error, Please try again later');
     }
   }
+
+  public static async deletePost(postId: mongoose.Types.ObjectId, res: Response) {
+    try {
+      // Delete post
+      await PostModel.deleteOne({ _id: postId }).exec();
+
+      // send updated serialised user in response
+      return res.send({
+        message: 'Post Deleted Successfully',
+        status: PostStatus.created
+      });
+    } catch (error){
+      console.error('deletePost-error', error);
+      return  res.sendStatus(httpCodes.serverError).send('Server Error, Please try again later');
+    }
+  }
 }
 
 export  {

@@ -2,6 +2,7 @@ import type { Request, Response } from 'express';
 import { httpCodes } from '../constants/http-status-code';
 import type { IUser } from '../DB/Models/User';
 import { PostService } from '../services/Post';
+import mongoose from 'mongoose';
 
 interface RequestValidatedByPassport extends Request {
   user: {
@@ -45,6 +46,12 @@ class PostServiceController {
       userId: id
 
     }, res, files.priceTagImage[0].buffer, files.productImage[0].buffer);
+  }
+
+  public static deletePost(req: Request, res: Response) {
+    const { postId } = req.body;
+    const objectId = new mongoose.Types.ObjectId(postId);
+    return PostService.deletePost(objectId, res);
   }
 }
 
