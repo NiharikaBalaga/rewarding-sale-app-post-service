@@ -5,4 +5,3 @@ export enum PostStatus {
   failed = 'POST_FAILED', // If any errors like server errors....
   deleted = 'POST_DELETED' // If post is deleted
 }
-}
