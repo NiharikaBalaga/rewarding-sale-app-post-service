@@ -43,6 +43,35 @@ const newPost = () => {
   ];
 };
 
+const verifyUpdatePost = () => {
+  return [
+    body('postId')
+      .trim()
+      .notEmpty()
+      .withMessage('Post Id is required'),
+    body('productName')
+      .trim()
+      .notEmpty()
+      .escape()
+      .isString()
+      .withMessage('Product Name is required'),
+    body('newPrice')
+      .trim()
+      .escape()
+      .notEmpty()
+      .isNumeric()
+      .withMessage('New price is required'),
+    body('newQuantity')
+      .trim()
+      .escape()
+      .optional()
+      .isNumeric()
+      .withMessage('New quantity is required')
+  ];
+};
+
+
+
 const validateErrors = (req: Request, res: Response, next: NextFunction) => {
   const errors = validationResult(req);
   if (errors.isEmpty()) {
@@ -57,4 +86,4 @@ const validateErrors = (req: Request, res: Response, next: NextFunction) => {
   });
 };
 
-export { newPost, validateErrors };
+export { newPost, verifyUpdatePost, validateErrors };

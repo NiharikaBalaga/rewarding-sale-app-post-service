@@ -133,6 +133,19 @@ class SQSService{
     }
   }
 
+  static async updatePostEvent(postId: mongoose.Types.ObjectId) {
+    try {
+        await this._sendMessageToQueue(JSON.stringify({
+            postId,
+            EVENT_TYPE: Events.updatePost
+        }));
+        return;
+    } catch (error) {
+        await PostService.postFailed(postId);
+        throw error;
+    }
+}
+
 }
 
 

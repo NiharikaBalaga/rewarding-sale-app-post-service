@@ -2,9 +2,10 @@ import express from 'express';
 import { PostServiceController } from '../controller';
 import multer from 'multer';
 import { ImageFileFilter } from './ImageFileFilter';
-import { newPost, validateErrors } from './RequestValidations';
+import { newPost,verifyUpdatePost, validateErrors } from './RequestValidations';
 import passport from '../strategies/passport-strategy';
 import { isBlocked, tokenBlacklist } from '../middlewares';
+
 
 const router = express.Router();
 
@@ -20,6 +21,8 @@ function getRouter() {
   // @ts-ignore
   router.post('', [passport.authenticate('jwt-access', { session: false }), isBlocked, tokenBlacklist, uploadImage.fields([{ name: 'priceTagImage', maxCount: 1 }, { name: 'productImage', maxCount: 1 }]), newPost(), validateErrors, PostServiceController.newPost]);
 
+  router.put('', [passport.authenticate('jwt-access', { session: false }), isBlocked, tokenBlacklist,verifyUpdatePost(),validateErrors, PostServiceController.updatePost]);
+  
   return router;
 }
 

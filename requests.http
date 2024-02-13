@@ -1,0 +1,60 @@
+### Generate Otp
+POST http://localhost:3000/api/auth/otp/generate
+content-type: application/json
+
+{
+  "phoneNumber": "437-477-1605"
+}
+
+### Logout an user
+GET http://localhost:3000/api/auth/user/logout
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2NWJhYTg3ZGUyNzBiY2M1YWIyOTc2OTEiLCJwaG9uZU51bWJlciI6IjQzNy01NTYtMjk0OCIsImlhdCI6MTcwNjc0NzgxOSwiZXhwIjoxNzA5MzM5ODE5fQ.xRi-PjoBsDLdaJWVXyW8qS76NFiTDtq_QVDwbuDb2PI
+
+
+### Verify Otp
+POST http://localhost:3000/api/auth/otp/verify
+content-type: application/json
+
+{
+  "phoneNumber": "437-477-1605",
+  "otp":  "935802"
+}
+
+### Sign Up an user
+POST http://localhost:3000/api/auth/user/signup
+content-type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2NWNhNjQ3MzE0YTdlYzA0MmMxMzI4MGIiLCJwaG9uZU51bWJlciI6IjQzNy00NzctMTYwNSIsImlhdCI6MTcwNzc2MjgwMywiZXhwIjoxNzEwMzU0ODAzfQ.EkNhawT_oQrVELMIRzfxO6xiVcp33k-v7eWPjV0zTYY
+
+{
+  "firstName": "Porkodi",
+  "lastName":  "Rajan",
+  "email":  "PorkodiRajan@gmail.com"
+}
+
+
+### Get Current User
+GET http://localhost:3000/api/auth/user
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2NWNhNjQ3MzE0YTdlYzA0MmMxMzI4MGIiLCJwaG9uZU51bWJlciI6IjQzNy00NzctMTYwNSIsImlhdCI6MTcwNzc2MjgwMywiZXhwIjoxNzEwMzU0ODAzfQ.EkNhawT_oQrVELMIRzfxO6xiVcp33k-v7eWPjV0zTYY
+### Update User
+PUT http://localhost:3000/api/auth/user
+content-type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2NWI4NjQ3YWYzOGJlODk5NjhiMGU5ZGUiLCJwaG9uZU51bWJlciI6IjQzNy00NzctMTYwNSIsImlhdCI6MTcwNzc0OTc0OCwiZXhwIjoxNzEwMzQxNzQ4fQ.vJhgoQOxD2mVzMLl0orV4N1WgwBHLGD45pX_eCTL1UY
+{
+  "firstName": "Rajan",
+  "email": "PorkodiRajan@gmail.com"
+}
+
+### Refresh Token
+GET http://localhost:3000/api/auth/token/refresh
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2NWJhYTg3ZGUyNzBiY2M1YWIyOTc2OTEiLCJwaG9uZU51bWJlciI6IjQzNy01NTYtMjk0OCIsImlhdCI6MTcwNjc0NzgxOSwiZXhwIjoxNzE5NzA3ODE5fQ.7Z69Z2EybpZQ3ih-lsqeVe86EuJPQwrDF1KgFOBdTiY
+
+
+### Update User Location
+PATCH http://localhost:3000/api/auth/user/location
+content-type: application/json
+Authorization:Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2NWNhNjQ3MzE0YTdlYzA0MmMxMzI4MGIiLCJwaG9uZU51bWJlciI6IjQzNy00NzctMTYwNSIsImlhdCI6MTcwNzc2MjgwMywiZXhwIjoxNzEwMzU0ODAzfQ.EkNhawT_oQrVELMIRzfxO6xiVcp33k-v7eWPjV0zTYY
+
+{
+  "longitude": -81.5579868,
+  "latitude": 43.4347027
+}

@@ -2,6 +2,9 @@ import type { Request, Response } from 'express';
 import { httpCodes } from '../constants/http-status-code';
 import type { IUser } from '../DB/Models/User';
 import { PostService } from '../services/Post';
+import { IPost } from 'lib/DB/Models/Post';
+import mongoose from 'mongoose';
+import { PostStatus } from '../DB/Models/post-status.enum';
 
 interface RequestValidatedByPassport extends Request {
   user: {
@@ -10,6 +13,7 @@ interface RequestValidatedByPassport extends Request {
     phoneNumber: string,
     iat: number,
     exp: number,
+
   }
 }
 
@@ -46,6 +50,32 @@ class PostServiceController {
 
     }, res, files.priceTagImage[0].buffer, files.productImage[0].buffer);
   }
+
+  public static async updatePost(req: Request, res: Response) {
+    try {     
+        const { postId, productName, newPrice, newQuantity,status } = req.body;
+        // Check if required fields are provided
+        if (!postId || !productName || !newPrice || !newQuantity) {
+            return res.status(httpCodes.badRequest).send('All fields including postId are required');
+        }
+
+        // Call updatePost function from PostService
+        await PostService.updatePost(
+            postId,{
+            productName,
+            newPrice,
+            newQuantity,
+            status: PostStatus.updated
+        },res);
+    } catch (error) {
+        console.error('updatePost-error', error);
+        return res.status(httpCodes.serverError).send('Server Error, Please try again later');
+    }
+}
+
+  
+
+  
 }
 
 export  {

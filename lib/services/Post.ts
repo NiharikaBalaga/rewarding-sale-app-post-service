@@ -76,6 +76,34 @@ class PostService {
       return res.status(httpCodes.serverError).send('Server Error, Please try again later');
     }
   }
+
+  static async updatePost(postId: mongoose.Types.ObjectId, updatePostData: Partial<IPost>, res: Response) {
+    try {
+
+      console.log(updatePostData);
+        // Check if postId is provided
+        const updatedPost = await this._update(postId, {
+          ...updatePostData
+        });
+
+        //send updatePost Event to post service SQS
+        await SQSService.updatePostEvent(updatePostData._id);
+
+        if (!updatedPost) {
+            return res.status(httpCodes.notFound).send('Post not found');
+        }
+
+        return res.send({
+            message: 'Post Updated Successfully',
+            status: PostStatus.updated
+        });
+    } catch (error) {
+        // TODO handle any failure
+        console.error('updatePost-error', error);
+        return res.status(httpCodes.serverError).send('Server Error, Please try again later');
+    }
+}
+
 }
 
 export  {
