@@ -85,7 +85,7 @@ class PostService {
       // send updated serialised user in response
       return res.send({
         message: 'Post Deleted Successfully',
-        status: PostStatus.created
+        status: PostStatus.deleted
       });
     } catch (error){
       console.error('deletePost-error', error);
