@@ -10,6 +10,9 @@ const router = express.Router();
 
 
 function getRouter() {
+  router.get('/hello', (req, res) => {
+    res.send({ message: 'Hello=world' });
+  });
   const uploadImage = multer({
     limits: {
       fileSize: 50 * 1024 * 1024 // 50 MB

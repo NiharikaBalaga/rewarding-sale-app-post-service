@@ -1,4 +1,5 @@
-import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
+import type { GetObjectRequest } from '@aws-sdk/client-s3';
+import { S3Client, PutObjectCommand, GetObjectCommand } from '@aws-sdk/client-s3';
 import * as process from 'process';
 import type mongoose from 'mongoose';
 
@@ -48,6 +49,23 @@ class S3Servive{
   ) {
     const productImageKey = `posts/${postId}/images/productImage.jpg`;
     return this._uploadFile(productImageKey, productImage);
+  }
+
+  static async downloadFile(bucketName: string, objectKey: string) {
+    try {
+      const getObjectRequest: GetObjectRequest = {
+        Bucket: bucketName,
+        Key: objectKey,
+      };
+      const response = await this.S3.send(
+        new GetObjectCommand(getObjectRequest),
+      );
+
+      return response.Body?.transformToByteArray();
+    } catch (error) {
+      console.error(`Error download file from S3`, error);
+      throw error;
+    }
   }
 }
 

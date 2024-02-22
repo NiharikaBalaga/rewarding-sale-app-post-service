@@ -7,8 +7,9 @@ import { S3Servive } from './S3';
 import { SQSService } from './SQS';
 import { PostStatus } from '../DB/Models/post-status.enum';
 
+
 class PostService {
-  static async newPostWithGivenId(postId: mongoose.Types.ObjectId, postDetails: Partial<IPost>) {
+  private static  async _newPostWithGivenId(postId: mongoose.Types.ObjectId, postDetails: Partial<IPost>) {
     const post =  new PostModel({
       _id: postId,
       ...postDetails,
@@ -16,21 +17,34 @@ class PostService {
     return post.save();
   }
 
-  static async newPost(postDetails: Partial<IPost>) {
-    const post =  new PostModel({
-      ...postDetails,
-    });
-    return post.save();
-  }
 
-  static async getPost(postId: string) {
+  static async getPost(postId: mongoose.Types.ObjectId) {
     return PostModel.findById(postId);
   }
 
-  static async postFailed(postId: mongoose.Types.ObjectId) {
+
+  static async postDeclined(postId: mongoose.Types.ObjectId, declinedReason: string) {
     return this._update(postId, {
-      status: PostStatus.failed
+      status: PostStatus.failed,
+      postDeclinedReason: declinedReason,
+      isActive: false
     });
+  }
+
+  static async publishPost(postId: mongoose.Types.ObjectId, validProductName: string) {
+    return this._update(postId, {
+      status: PostStatus.published,
+      productName: validProductName,
+      isActive: true
+    });
+  }
+
+  static async findDuplicatePost(productName: string) {
+    return PostModel.findOne({
+      productName,
+      isActive: true,
+      // TODO include location as well
+    }).exec();
   }
 
 
@@ -47,8 +61,7 @@ class PostService {
       const [priceTagResponse, productImageResponse] = await Promise.all([S3Servive.uploadPriceTag(priceTagImage, postId), S3Servive.uploadProductImage(productImage, postId)]);
 
       // step - 3 = Create post in post collection
-      const newPost = new PostModel({
-        _id: postId,
+      await this._newPostWithGivenId(postId, {
         userId: newPostData.userId,
         priceTagImageS3Uri: priceTagResponse?.s3URI,
         priceTagImageObjectUrl: priceTagResponse?.imageUrl,
@@ -61,7 +74,6 @@ class PostService {
         oldQuantity: newPostData.oldQuantity,
         newQuantity: newPostData.newQuantity
       });
-      await newPost.save();
 
       // step - 4 = send newPost Event to post service SQS
       await SQSService.newPostEvent(postId);

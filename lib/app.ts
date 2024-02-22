@@ -28,7 +28,10 @@ async function bootstrap() {
     'aws_sqs_queue_name',
     'aws_sqs_queue_url',
     'aws_s3_access_key_id',
-    'aws_s3_secret_access_key'];
+    'aws_s3_secret_access_key',
+    'OPEN_AI_SECRET_KEY',
+    'OPEN_AI_PRODUCT_NAME_MODEL'
+  ];
 
   const missingVariables = requiredEnvVariables.filter(variable => {
     return !process.env[variable];

@@ -25,14 +25,14 @@ const newPost = () => {
     body('oldQuantity')
       .trim()
       .escape()
-      .optional()
       .isNumeric()
+      .notEmpty()
       .withMessage('Old quantity is required'),
     body('newQuantity')
       .trim()
       .escape()
-      .optional()
       .isNumeric()
+      .notEmpty()
       .withMessage('New quantity is required'),
     body('productDescription')
       .trim()

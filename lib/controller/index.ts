@@ -28,13 +28,31 @@ class PostServiceController {
 
 
   public static newPost(req: MulterRequest, res: Response) {
+    console.log('newPost');
     const { files } = req;
     if (!files || !files.priceTagImage || !files.productImage)
       return res.status(httpCodes.badRequest).send('Both priceTage and ProductImage are required');
 
 
     const { id }  = req.currentUser;
-    const { matchedData: { productName, oldPrice, newPrice, oldQuantity, newQuantity, productDescription }  } = req.body;
+    // eslint-disable-next-line prefer-const
+    let { matchedData: { productName, oldPrice, newPrice, oldQuantity = 1, newQuantity = 1, productDescription }  } = req.body;
+
+    oldPrice = parseFloat(oldPrice);
+    newPrice = parseFloat(newPrice);
+    oldQuantity = parseFloat(oldQuantity);
+    newQuantity = parseFloat(newQuantity);
+
+    // both old price - new price and old quantity and new quantity can't be same
+    if (newPrice === oldPrice && newQuantity === oldQuantity) {
+      // this is invalid request
+      return  res.status(httpCodes.badRequest).send('Invalid Request, both newPrice, oldPrice and newQuantity and oldQuantity cannot be equal');
+    }
+
+    if (newPrice >= oldPrice && newQuantity <= oldQuantity)
+      return res.status(httpCodes.badRequest).send('Invalid Request, Both new Quantity and new price cannot be lower than or equal to old');
+
+
     return PostService.createNewPost({
       productName,
       oldPrice,
