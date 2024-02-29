@@ -77,7 +77,7 @@ class PostDLLService {
           PostDLLModel.findByIdAndDelete(node.id)
         ]);
       } else {
-        console.log('Deleting Post');
+        console.log('Deleting Middle Node Post');
         const nextNode = await PostDLLModel.findById(node.next);
         if (nextNode) {
           await Promise.all([
