@@ -23,6 +23,7 @@ class RekognitionService {
       console.log('Processing New Post');
       let validPost = false;
       let postDeclinedReason: string = 'Post Not Found';
+      let productName = '';
       const post = await PostService.getPost(postId);
       console.log(`Successfully Fetched the Post from Database - PostID: ${postId}`);
       if (post) {
@@ -43,10 +44,12 @@ class RekognitionService {
             console.log('Text Detection Successful, Entering into Validation Pipeline');
             // process into pipeline
             const { validated, reason, validProductName, duplicatedPost } =
-              await this._postValidationPipeline(post, priceTagTextDetection, productTextDetection);
+              await this._postValidationPipeline(post);
             validPost = validated;
             if (reason)
               postDeclinedReason = reason;
+            if (validProductName)
+              productName = validProductName;
 
             if (validated && validProductName) {
               // it's a valid post
@@ -56,7 +59,7 @@ class RekognitionService {
                 console.log(`Post Validation Success - not a duplicate post, Post is Live now, Valid PostName Updated`);
               } else {
                 // it's a duplicate post
-                // TODO Implement POST UPDATES COLLECTION
+                await PostService.duplicatePost(postId, validProductName);
                 console.log(`Post Validation Success - But it's duplicate post`);
               }
             }
@@ -73,18 +76,18 @@ class RekognitionService {
 
       if (!validPost) {
         console.log(`Validation Status:${validPost}, reason:${postDeclinedReason}`);
-        return PostService.postDeclined(postId, postDeclinedReason);
+        return PostService.postDeclined(postId, postDeclinedReason, productName);
       }
     } catch (error) {
       // if any error - make post status as failed
-      await PostService.postDeclined(postId, 'Server Error');
+      await PostService.postFailed(postId, 'Server Error');
       console.error('newPost-rekognition-error', error);
       throw error;
     }
   }
 
   // This function returns  a post is valid or not after multiple validation in this pipeline
-  private static async _postValidationPipeline(post: IPost, priceTagTextDetection: TextDetection[], productTextDetection: TextDetection[]) {
+  private static async _postValidationPipeline(post: IPost) {
     try {
       let validOldPrice = false;
       let validNewPrice = false;
@@ -101,7 +104,7 @@ class RekognitionService {
 
       const validPrices = openAiPriceResponse.map(price => parseFloat(price).toFixed(2));
 
-      console.log('validPrices', validPrices);
+      console.log('parsedPrices', validPrices);
 
       const [oldPrice, oldQuantity, newPrice, newQuantity] = validPrices;
 
@@ -133,8 +136,7 @@ class RekognitionService {
 
       // TODO add location validation
 
-      // Step - 2 Validate Product Name in product Image
-
+      // Step - 2 Validate Product Name
       const validProductName = await this._isValidProductName(post) ;
       if (!validProductName) {
         console.log('Validation Pipeline,  Failed - Not a valid Product Name');
@@ -145,6 +147,16 @@ class RekognitionService {
       // Step-3 Check Duplicate Post
       const duplicatedPost = await PostService.findDuplicatePost(validProductName);// TODO add location fields as well
 
+
+      // step-4 Check if same user duplicate Post
+      if (duplicatedPost && duplicatedPost.userId.equals(post.userId)) {
+        console.log('Validation Pipeline, Failed - Same user duplicate post');
+        return  {
+          validated: false,
+          reason: 'Same user duplicate post',
+          validProductName
+        };
+      }
       return  {
         validated: true,
         validProductName,
@@ -168,7 +180,7 @@ class RekognitionService {
         }
         // Match Product Names with post name
         const productName = await OpenAIService.getValidProductName(detectedProductNamesInPriceTag, post.productName);
-        console.log('ValidProductNameFound', productName);
+        console.log('ValidProductName', productName);
         if (!productName) {
           resolve('');
           return;

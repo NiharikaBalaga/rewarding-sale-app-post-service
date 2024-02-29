@@ -4,7 +4,7 @@ export enum PostStatus {
   declined = 'POST_DECLINED', // If post doesn't meet our guidelines
   failed = 'POST_FAILED', // If any errors like server errors....
   blocked = 'POST_BLOCKED',
-  duplicate = 'POST_DUPLICATE',
+  duplicate = 'POST_DUPLICATE', // If the post is duplicate of another post
   // status if decision service flag the post
   // what if admin wants to remove the post
 }

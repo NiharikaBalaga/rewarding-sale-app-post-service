@@ -23,7 +23,7 @@ class PostService {
   }
 
 
-  static async postDeclined(postId: mongoose.Types.ObjectId, declinedReason: string) {
+  static async postFailed(postId: mongoose.Types.ObjectId, declinedReason: string) {
     return this._update(postId, {
       status: PostStatus.failed,
       postDeclinedReason: declinedReason,
@@ -31,11 +31,29 @@ class PostService {
     });
   }
 
+  static async postDeclined(postId: mongoose.Types.ObjectId, declinedReason: string, validProductName: string) {
+    return this._update(postId, {
+      status: PostStatus.failed,
+      postDeclinedReason: declinedReason,
+      isActive: false,
+      productName: validProductName
+    });
+  }
   static async publishPost(postId: mongoose.Types.ObjectId, validProductName: string) {
+    // TODO init the post DLL
     return this._update(postId, {
       status: PostStatus.published,
       productName: validProductName,
       isActive: true
+    });
+  }
+
+  static async duplicatePost(postId: mongoose.Types.ObjectId, validProductName: string) {
+    // TODO implement post DLL logic
+    return this._update(postId, {
+      status: PostStatus.duplicate,
+      isActive: false,
+      productName: validProductName
     });
   }
 

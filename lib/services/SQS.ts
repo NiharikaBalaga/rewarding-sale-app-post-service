@@ -124,7 +124,7 @@ class SQSService{
       }));
       return;
     } catch (error) {
-      await PostService.postDeclined(postId, 'Server Error');
+      await PostService.postFailed(postId, 'Server Error');
       throw error;
     }
   }
