@@ -26,6 +26,10 @@ interface MulterRequest extends RequestInterferedByIsBlocked {
 }
 class PostServiceController {
 
+  public static deletePost(req: RequestInterferedByIsBlocked, res: Response) {
+    const { matchedData: { postId } } = req.body;
+    return PostService.deletePost(postId, req.user.userId, res);
+  }
 
   public static newPost(req: MulterRequest, res: Response) {
     console.log('newPost');
