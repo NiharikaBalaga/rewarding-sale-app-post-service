@@ -7,6 +7,7 @@ import { S3Servive } from './S3';
 import { SQSService } from './SQS';
 import { PostStatus } from '../DB/Models/post-status.enum';
 import { PostDLLService } from './PostDLL';
+import { SNSService } from './SNS';
 
 
 class PostService {
@@ -31,13 +32,24 @@ class PostService {
     const { shouldMakeNewPostLive, newLivePostId } = await PostDLLService.deletePost(post.id);
 
     if (shouldMakeNewPostLive && newLivePostId) {
-      await this._update(newLivePostId, {
+      const newLivePost = await this._update(newLivePostId, {
         isActive: true,
         status: PostStatus.published
       });
+      if (newLivePost) {
+        // SNS Event
+        await SNSService.userPostUpdate(newLivePost);
+      }
     }
 
-    await PostModel.findByIdAndDelete(postId);
+    const deletedPost = await PostModel.findByIdAndDelete(postId);
+
+
+    if (deletedPost) {
+      // SNS Event
+      await SNSService.userPostDelete(deletedPost);
+    }
+
 
     return res.status(httpCodes.ok).send({});
 
@@ -50,20 +62,32 @@ class PostService {
 
 
   static async postFailed(postId: mongoose.Types.ObjectId, declinedReason: string) {
-    return this._update(postId, {
+    const failedPost = await  this._update(postId, {
       status: PostStatus.failed,
       postDeclinedReason: declinedReason,
       isActive: false
     });
+
+    if (failedPost) {
+      // SNS Event
+      await SNSService.userPostUpdate(failedPost);
+    }
+    return failedPost;
   }
 
   static async postDeclined(postId: mongoose.Types.ObjectId, declinedReason: string, validProductName: string) {
-    return this._update(postId, {
+    const declinedPost = await  this._update(postId, {
       status: PostStatus.failed,
       postDeclinedReason: declinedReason,
       isActive: false,
       productName: validProductName
     });
+
+    if (declinedPost) {
+      // SNS Event
+      await SNSService.userPostUpdate(declinedPost);
+    }
+    return declinedPost;
   }
 
   static async publishPost(postId: mongoose.Types.ObjectId, validProductName: string) {
@@ -73,8 +97,14 @@ class PostService {
       isActive: true
     });
 
-    // init the post DLL
-    await PostDLLService.initPostDLL(publishPost?.id);
+    if (publishPost) {
+      // SNS Event
+      await SNSService.userPostUpdate(publishPost);
+
+      // init the post DLL
+      await PostDLLService.initPostDLL(publishPost.id);
+
+    }
 
     return publishPost;
   }
@@ -86,17 +116,31 @@ class PostService {
       productName: validProductName
     });
 
-    // Add duplicate post into the Post DLL
-    await PostDLLService.addDuplicatePost(duplicatePost?.id);
+    if (duplicatePost) {
+      // SNS event
+      await SNSService.userPostUpdate(duplicatePost);
+
+      // Add duplicate post into the Post DLL
+      await PostDLLService.addDuplicatePost(duplicatePost?.id);
+    }
+
     return duplicatePost;
   }
 
   static async findDuplicatePost(productName: string) {
-    return PostModel.findOne({
+    // TODO include location as well
+
+    const duplicatePostQuery = {
       productName,
-      isActive: true,
-      // TODO include location as well
-    }).exec();
+      $or: [
+        { status: PostStatus.created },
+        { status: PostStatus.published },
+        { status: PostStatus.blocked },
+        { status: PostStatus.duplicate }
+      ]
+    };
+
+    return PostModel.findOne(duplicatePostQuery).exec();
   }
 
 
@@ -113,7 +157,7 @@ class PostService {
       const [priceTagResponse, productImageResponse] = await Promise.all([S3Servive.uploadPriceTag(priceTagImage, postId), S3Servive.uploadProductImage(productImage, postId)]);
 
       // step - 3 = Create post in post collection
-      await this._newPostWithGivenId(postId, {
+      const newPost = await this._newPostWithGivenId(postId, {
         userId: newPostData.userId,
         priceTagImageS3Uri: priceTagResponse?.s3URI,
         priceTagImageObjectUrl: priceTagResponse?.imageUrl,
@@ -127,7 +171,11 @@ class PostService {
         newQuantity: newPostData.newQuantity
       });
 
-      // step - 4 = send newPost Event to post service SQS
+      // SNS Event
+      // step - 4 = Publish to post topic SNS for new Post
+      await SNSService.newUserPost(newPost);
+
+      // step - 5 = send newPost Event to post service SQS
       await SQSService.newPostEvent(postId);
 
       return res.send({

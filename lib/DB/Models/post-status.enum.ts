@@ -5,6 +5,7 @@ export enum PostStatus {
   failed = 'POST_FAILED', // If any errors like server errors....
   blocked = 'POST_BLOCKED',
   duplicate = 'POST_DUPLICATE', // If the post is duplicate of another post
+  expired = 'POST_EXPIRED',
   // status if decision service flag the post
   // what if admin wants to remove the post
 }

@@ -30,7 +30,10 @@ async function bootstrap() {
     'aws_s3_access_key_id',
     'aws_s3_secret_access_key',
     'OPEN_AI_SECRET_KEY',
-    'OPEN_AI_PRODUCT_NAME_MODEL'
+    'OPEN_AI_PRODUCT_NAME_MODEL',
+    'aws_sns_access_key_id',
+    'aws_sns_secret_access_key',
+    'POST_TOPIC_SNS_ARN'
   ];
 
   const missingVariables = requiredEnvVariables.filter(variable => {
