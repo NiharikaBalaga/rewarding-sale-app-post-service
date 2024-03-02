@@ -12,7 +12,6 @@ import {
 import { SQSProcessorService } from './SQSProcessor';
 import type mongoose from 'mongoose';
 import { Events } from './events.enum';
-import { de_GetPlatformApplicationAttributesCommand } from '@aws-sdk/client-sns/dist-types/protocols/Aws_query';
 import { PostService } from './Post';
 
 class SQSService{
@@ -48,9 +47,6 @@ class SQSService{
           // I have some messages to process
 
           await SQSProcessorService.ProcessSqsMessage(messages);
-
-          // once processed
-
           // delete the messages
           // @ts-ignore
           await this._deleteMessages(messages, process.env.aws_sqs_queue_url);
@@ -128,7 +124,7 @@ class SQSService{
       }));
       return;
     } catch (error) {
-      await PostService.postFailed(postId);
+      await PostService.postFailed(postId, 'Server Error');
       throw error;
     }
   }

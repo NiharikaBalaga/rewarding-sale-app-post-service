@@ -1,6 +1,7 @@
 import { Events } from './events.enum';
 import { UserService } from './User';
 import type mongoose from 'mongoose';
+import { RekognitionService } from './Rekognition';
 
 class SQSProcessorService {
   static async ProcessSqsMessage(messages: any[]) {
@@ -106,7 +107,11 @@ class SQSProcessorService {
   }
 
   private static async _handleNewPost(postId: mongoose.Types.ObjectId) {
-    console.log('_handleNewPost-todo', postId);
+    try {
+      await RekognitionService.newPost(postId);
+    } catch (error) {
+      console.error('_handleNewPost-error', error);
+    }
   }
 }
 

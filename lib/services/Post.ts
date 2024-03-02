@@ -6,31 +6,141 @@ import { httpCodes } from '../constants/http-status-code';
 import { S3Servive } from './S3';
 import { SQSService } from './SQS';
 import { PostStatus } from '../DB/Models/post-status.enum';
+import { PostDLLService } from './PostDLL';
+import { SNSService } from './SNS';
+
 
 class PostService {
-  static async newPostWithGivenId(postId: mongoose.Types.ObjectId, postDetails: Partial<IPost>) {
-    const post =  new PostModel({
+  private static async _newPostWithGivenId(postId: mongoose.Types.ObjectId, postDetails: Partial<IPost>) {
+    const post = new PostModel({
       _id: postId,
       ...postDetails,
     });
     return post.save();
   }
 
-  static async newPost(postDetails: Partial<IPost>) {
-    const post =  new PostModel({
-      ...postDetails,
+  static async deletePost(postId: mongoose.Types.ObjectId, userId: string, res: Response) {
+    // step - 1 find the post to delete
+    const post = await PostModel.findOne({
+      _id: postId,
+      userId
     });
-    return post.save();
+
+    if (!post) return res.status(httpCodes.badRequest).send('Post does not exist');
+
+    // step - 2 Check and update Post DLL list
+    const { shouldMakeNewPostLive, newLivePostId } = await PostDLLService.deletePost(post.id);
+
+    if (shouldMakeNewPostLive && newLivePostId) {
+      const newLivePost = await this._update(newLivePostId, {
+        isActive: true,
+        status: PostStatus.published
+      });
+      if (newLivePost) {
+        // SNS Event
+        await SNSService.userPostUpdate(newLivePost);
+      }
+    }
+
+    const deletedPost = await PostModel.findByIdAndDelete(postId);
+
+
+    if (deletedPost) {
+      // SNS Event
+      await SNSService.userPostDelete(deletedPost);
+    }
+
+
+    return res.status(httpCodes.ok).send({});
+
   }
 
-  static async getPost(postId: string) {
+
+  static async getPost(postId: mongoose.Types.ObjectId) {
     return PostModel.findById(postId);
   }
 
-  static async postFailed(postId: mongoose.Types.ObjectId) {
-    return this._update(postId, {
-      status: PostStatus.failed
+
+  static async postFailed(postId: mongoose.Types.ObjectId, declinedReason: string) {
+    const failedPost = await  this._update(postId, {
+      status: PostStatus.failed,
+      postDeclinedReason: declinedReason,
+      isActive: false
     });
+
+    if (failedPost) {
+      // SNS Event
+      await SNSService.userPostUpdate(failedPost);
+    }
+    return failedPost;
+  }
+
+  static async postDeclined(postId: mongoose.Types.ObjectId, declinedReason: string, validProductName: string) {
+    const declinedPost = await  this._update(postId, {
+      status: PostStatus.failed,
+      postDeclinedReason: declinedReason,
+      isActive: false,
+      productName: validProductName
+    });
+
+    if (declinedPost) {
+      // SNS Event
+      await SNSService.userPostUpdate(declinedPost);
+    }
+    return declinedPost;
+  }
+
+  static async publishPost(postId: mongoose.Types.ObjectId, validProductName: string) {
+    const publishPost = await this._update(postId, {
+      status: PostStatus.published,
+      productName: validProductName,
+      isActive: true
+    });
+
+    if (publishPost) {
+      // SNS Event
+      await SNSService.userPostUpdate(publishPost);
+
+      // init the post DLL
+      await PostDLLService.initPostDLL(publishPost.id);
+
+    }
+
+    return publishPost;
+  }
+
+  static async duplicatePost(postId: mongoose.Types.ObjectId, validProductName: string) {
+    const duplicatePost = await this._update(postId, {
+      status: PostStatus.duplicate,
+      isActive: false,
+      productName: validProductName
+    });
+
+    if (duplicatePost) {
+      // SNS event
+      await SNSService.userPostUpdate(duplicatePost);
+
+      // Add duplicate post into the Post DLL
+      await PostDLLService.addDuplicatePost(duplicatePost?.id);
+    }
+
+    return duplicatePost;
+  }
+
+  static async findDuplicatePost(productName: string) {
+    // TODO include location as well
+
+    const duplicatePostQuery = {
+      productName,
+      $or: [
+        { status: PostStatus.created },
+        { status: PostStatus.published },
+        { status: PostStatus.blocked },
+        { status: PostStatus.duplicate }
+      ]
+    };
+
+    return PostModel.findOne(duplicatePostQuery).exec();
   }
 
 
@@ -47,8 +157,7 @@ class PostService {
       const [priceTagResponse, productImageResponse] = await Promise.all([S3Servive.uploadPriceTag(priceTagImage, postId), S3Servive.uploadProductImage(productImage, postId)]);
 
       // step - 3 = Create post in post collection
-      const newPost = new PostModel({
-        _id: postId,
+      const newPost = await this._newPostWithGivenId(postId, {
         userId: newPostData.userId,
         priceTagImageS3Uri: priceTagResponse?.s3URI,
         priceTagImageObjectUrl: priceTagResponse?.imageUrl,
@@ -61,9 +170,12 @@ class PostService {
         oldQuantity: newPostData.oldQuantity,
         newQuantity: newPostData.newQuantity
       });
-      await newPost.save();
 
-      // step - 4 = send newPost Event to post service SQS
+      // SNS Event
+      // step - 4 = Publish to post topic SNS for new Post
+      await SNSService.newUserPost(newPost);
+
+      // step - 5 = send newPost Event to post service SQS
       await SQSService.newPostEvent(postId);
 
       return res.send({
@@ -78,6 +190,6 @@ class PostService {
   }
 }
 
-export  {
+export {
   PostService
 };

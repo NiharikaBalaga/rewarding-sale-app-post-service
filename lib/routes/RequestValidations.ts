@@ -25,14 +25,14 @@ const newPost = () => {
     body('oldQuantity')
       .trim()
       .escape()
-      .optional()
       .isNumeric()
+      .notEmpty()
       .withMessage('Old quantity is required'),
     body('newQuantity')
       .trim()
       .escape()
-      .optional()
       .isNumeric()
+      .notEmpty()
       .withMessage('New quantity is required'),
     body('productDescription')
       .trim()
@@ -40,6 +40,15 @@ const newPost = () => {
       .escape()
       .isString()
       .withMessage('Description must be valid')
+  ];
+};
+
+const deletePost = () => {
+  return [
+    body('postId')
+      .trim()
+      .notEmpty()
+      .withMessage('Post Id is required')
   ];
 };
 
@@ -57,4 +66,4 @@ const validateErrors = (req: Request, res: Response, next: NextFunction) => {
   });
 };
 
-export { newPost, validateErrors };
+export { newPost, validateErrors, deletePost };
