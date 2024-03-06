@@ -5,7 +5,7 @@ class OpenAIService {
     apiKey: process.env.OPEN_AI_SECRET_KEY
   });
 
-  static async getPrices(priceTagImageURL: string) {
+  static async getPricesAndCategory(priceTagImageURL: string) {
     try {
       const response = await this.openAI.chat.completions.create({
         model: process.env.OPEN_AI_PRODUCT_PRICE_MODEL || 'gpt-4-vision-preview',
@@ -13,8 +13,8 @@ class OpenAIService {
           {
             role: 'user',
             content: [
-              { type: 'text', text: 'From this price tag image, get me the old price, old quantity and new price, new quantity, if old quantity is not mentioned explicitly consider it as 1.And provide the output in the format of array like' +
-                  'old price, old quantity, new price, new quantity just numbers. Please never give output in text as description. Give only as numbers as requested strictly'  },
+              { type: 'text', text: 'From this price tag image, get me the old price, old quantity and new price, new quantity if old quantity is not mentioned explicitly consider it as 1.Also get me product category And provide the output in the format of array like' +
+                  'old price, old quantity, new price, new quantity, product category just numbers except for product category . Please never give output in text as description. Give only as numbers as requested strictly except for product category'  },
               {
                 type: 'image_url',
                 image_url: {

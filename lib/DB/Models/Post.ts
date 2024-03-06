@@ -21,7 +21,7 @@ export interface IPost extends Document {
   postDeclinedReason: string,
   postBlockedReason: string,
   postNotActiveReason: string,
-  duplicatePostOf: mongoose.Types.ObjectId
+  postCategory: string
 }
 
 const PostSchema: mongoose.Schema = new mongoose.Schema({
@@ -108,10 +108,11 @@ const PostSchema: mongoose.Schema = new mongoose.Schema({
     required: false // TODO Make is false if we use image processing
   },
 
-  duplicatePostOf: {
-    type: mongoose.Types.ObjectId,
-    ref: 'Posts',
+  postCategory: {
+    type: String,
+    required: false,
     index: true,
+    uppercase: true,
   }
 
   // TODO add location fields
