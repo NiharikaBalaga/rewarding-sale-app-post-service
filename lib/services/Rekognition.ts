@@ -24,6 +24,7 @@ class RekognitionService {
       let validPost = false;
       let postDeclinedReason: string = 'Post Not Found';
       let productName = '';
+      let postCat = '';
       const post = await PostService.getPost(postId);
       console.log(`Successfully Fetched the Post from Database - PostID: ${postId}`);
       if (post) {
@@ -43,23 +44,25 @@ class RekognitionService {
           if (priceTagTextDetection && productTextDetection) {
             console.log('Text Detection Successful, Entering into Validation Pipeline');
             // process into pipeline
-            const { validated, reason, validProductName, duplicatedPost } =
+            const { validated, reason, validProductName, duplicatedPost, postCategory } =
               await this._postValidationPipeline(post);
             validPost = validated;
             if (reason)
               postDeclinedReason = reason;
             if (validProductName)
               productName = validProductName;
+            if (postCategory)
+              postCat = postCategory;
 
             if (validated && validProductName) {
               // it's a valid post
               if (!duplicatedPost) {
                 // it's not a duplicate post - Updated validatedProductName
-                await PostService.publishPost(postId, validProductName);
+                await PostService.publishPost(postId, validProductName, postCat);
                 console.log(`Post Validation Success - not a duplicate post, Post is Live now, Valid PostName Updated`);
               } else {
                 // it's a duplicate post
-                await PostService.duplicatePost(postId, validProductName);
+                await PostService.duplicatePost(postId, validProductName, postCat);
                 console.log(`Post Validation Success - But it's duplicate post`);
               }
             }
@@ -76,7 +79,7 @@ class RekognitionService {
 
       if (!validPost) {
         console.log(`Validation Status:${validPost}, reason:${postDeclinedReason}`);
-        return PostService.postDeclined(postId, postDeclinedReason, productName);
+        return PostService.postDeclined(postId, postDeclinedReason, productName, postCat);
       }
     } catch (error) {
       // if any error - make post status as failed
@@ -96,15 +99,20 @@ class RekognitionService {
       console.log('Validation Pipeline, Comparing Old and New Prices and quantities');
       // step-1 Validate new and Old prices
 
-      const openAiPriceResponse = await OpenAIService.getPrices(post.priceTagImageObjectUrl);
+      const openAiResponse = await OpenAIService.getPricesAndCategory(post.priceTagImageObjectUrl);
 
-      console.log('openAiPriceResponse', openAiPriceResponse);
+      console.log('openAiResponse', openAiResponse);
 
-      if (!openAiPriceResponse) return { validated: false, reason: 'Image Does not contains valid Price details' };
+      if (!openAiResponse) return { validated: false, reason: 'Image Does not contains valid Price details' };
 
-      const validPrices = openAiPriceResponse.map(price => parseFloat(price).toFixed(2));
+      const openAiPrices = openAiResponse.slice(0, openAiResponse.length);
 
-      console.log('parsedPrices', validPrices);
+      let postCategory = '';
+      if (openAiResponse[openAiResponse.length - 1])
+        postCategory = openAiResponse[openAiResponse.length - 1].toUpperCase();
+
+
+      const validPrices = openAiPrices.map(price => parseFloat(price).toFixed(2));
 
       const [oldPrice, oldQuantity, newPrice, newQuantity] = validPrices;
 
@@ -154,13 +162,15 @@ class RekognitionService {
         return  {
           validated: false,
           reason: 'Same user duplicate post',
-          validProductName
+          validProductName,
+          postCategory
         };
       }
       return  {
         validated: true,
         validProductName,
-        duplicatedPost
+        duplicatedPost,
+        postCategory
       };
 
     } catch (error) {

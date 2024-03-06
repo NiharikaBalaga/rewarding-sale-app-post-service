@@ -75,12 +75,13 @@ class PostService {
     return failedPost;
   }
 
-  static async postDeclined(postId: mongoose.Types.ObjectId, declinedReason: string, validProductName: string) {
+  static async postDeclined(postId: mongoose.Types.ObjectId, declinedReason: string, validProductName: string, postCategory: string) {
     const declinedPost = await  this._update(postId, {
       status: PostStatus.failed,
       postDeclinedReason: declinedReason,
       isActive: false,
-      productName: validProductName
+      productName: validProductName,
+      postCategory,
     });
 
     if (declinedPost) {
@@ -90,11 +91,12 @@ class PostService {
     return declinedPost;
   }
 
-  static async publishPost(postId: mongoose.Types.ObjectId, validProductName: string) {
+  static async publishPost(postId: mongoose.Types.ObjectId, validProductName: string, postCategory: string) {
     const publishPost = await this._update(postId, {
       status: PostStatus.published,
       productName: validProductName,
-      isActive: true
+      isActive: true,
+      postCategory
     });
 
     if (publishPost) {
@@ -109,11 +111,12 @@ class PostService {
     return publishPost;
   }
 
-  static async duplicatePost(postId: mongoose.Types.ObjectId, validProductName: string) {
+  static async duplicatePost(postId: mongoose.Types.ObjectId, validProductName: string, postCategory: string) {
     const duplicatePost = await this._update(postId, {
       status: PostStatus.duplicate,
       isActive: false,
-      productName: validProductName
+      productName: validProductName,
+      postCategory,
     });
 
     if (duplicatePost) {
