@@ -7,7 +7,8 @@ export interface IPostDLL extends Document {
   prev?: mongoose.Types.ObjectId,
   next?: mongoose.Types.ObjectId
   isHead?: Boolean,
-  isTail?: Boolean
+  isTail?: Boolean,
+  productName: string,
 }
 
 const PostDLLSchema: mongoose.Schema = new mongoose.Schema({
@@ -39,6 +40,12 @@ const PostDLLSchema: mongoose.Schema = new mongoose.Schema({
     index: true,
     type: Boolean,
     default: false
+  },
+
+  productName: {
+    index: true,
+    type: String,
+    required: true,
   }
 });
 
