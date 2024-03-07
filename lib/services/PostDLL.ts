@@ -3,13 +3,14 @@ import PostDLLModel from '../DB/Models/Post-DLL';
 import { SNSService } from './SNS';
 
 class PostDLLService {
-  static async initPostDLL(postId: mongoose.Types.ObjectId) {
+  static async initPostDLL(postId: mongoose.Types.ObjectId, productName: string) {
     const node = new PostDLLModel({
       prev: null,
       next: null,
       val: postId,
       isHead: true,
-      isTail: true
+      isTail: true,
+      productName,
     });
 
     if (node) {
@@ -20,7 +21,7 @@ class PostDLLService {
     return node.save();
   }
 
-  static async deletePost(postId: mongoose.Types.ObjectId) {
+  static async deletePost(postId: mongoose.Types.ObjectId, productName: string) {
     const node = await PostDLLModel.findOne({
       val: postId
     });
@@ -41,6 +42,7 @@ class PostDLLService {
       } else if (node.isHead) {
         // Head Node
         const tailNode = await PostDLLModel.findOne({
+          productName,
           isTail: true
         });
         if (tailNode) {
@@ -139,9 +141,10 @@ class PostDLLService {
       newLivePostId
     };
   }
-  static async addDuplicatePost(postId: mongoose.Types.ObjectId) {
+  static async addDuplicatePost(postId: mongoose.Types.ObjectId, productName: string) {
     // step - 1 find the tail node
     const tailNode = await PostDLLModel.findOne({
+      productName,
       isTail: true
     });
 
@@ -152,10 +155,12 @@ class PostDLLService {
         prev: tailNode.id,
         next: null,
         isTail: true,
+        productName,
       });
 
       const [updatedTailNode, newSavedNode] = await Promise.all([
         PostDLLModel.findByIdAndUpdate(tailNode.id, {
+          productName,
           isTail: false,
           next: newNode.id
         }),

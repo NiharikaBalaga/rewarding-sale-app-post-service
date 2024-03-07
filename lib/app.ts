@@ -11,6 +11,7 @@ import * as mongoose from 'mongoose';
 import fs from 'fs';
 import { SQSService } from './services/SQS';
 import passport from './strategies/passport-strategy';
+import { LocationService } from './services/Location';
 
 async function bootstrap() {
   if (!fs.existsSync(`.env.${env}`)) {
@@ -33,7 +34,8 @@ async function bootstrap() {
     'OPEN_AI_PRODUCT_NAME_MODEL',
     'aws_sns_access_key_id',
     'aws_sns_secret_access_key',
-    'POST_TOPIC_SNS_ARN'
+    'POST_TOPIC_SNS_ARN',
+    'GOOGLE_MAPS_API_KEY'
   ];
 
   const missingVariables = requiredEnvVariables.filter(variable => {
@@ -57,6 +59,7 @@ async function bootstrap() {
 
 
   try {
+    // await LocationService.getPlaceDetails('ChIJTa2TPvn2K4gRiHG331ctW2I');
     await mongoose.connect(process.env.MONGODB_URI_POST || '', {
       dbName: process.env.MONGO_POST_DATABASE,
     });

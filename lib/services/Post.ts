@@ -29,7 +29,7 @@ class PostService {
     if (!post) return res.status(httpCodes.badRequest).send('Post does not exist');
 
     // step - 2 Check and update Post DLL list
-    const { shouldMakeNewPostLive, newLivePostId } = await PostDLLService.deletePost(post.id);
+    const { shouldMakeNewPostLive, newLivePostId } = await PostDLLService.deletePost(post.id, post.productName);
 
     if (shouldMakeNewPostLive && newLivePostId) {
       const newLivePost = await this._update(newLivePostId, {
@@ -104,7 +104,7 @@ class PostService {
       await SNSService.userPostUpdate(publishPost);
 
       // init the post DLL
-      await PostDLLService.initPostDLL(publishPost.id);
+      await PostDLLService.initPostDLL(publishPost.id, publishPost.productName);
 
     }
 
@@ -124,7 +124,7 @@ class PostService {
       await SNSService.userPostUpdate(duplicatePost);
 
       // Add duplicate post into the Post DLL
-      await PostDLLService.addDuplicatePost(duplicatePost?.id);
+      await PostDLLService.addDuplicatePost(duplicatePost?.id, duplicatePost.productName);
     }
 
     return duplicatePost;
