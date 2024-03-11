@@ -40,7 +40,7 @@ class PostServiceController {
 
     const { id }  = req.currentUser;
     // eslint-disable-next-line prefer-const
-    let { matchedData: { productName, oldPrice, newPrice, oldQuantity = 1, newQuantity = 1, productDescription }  } = req.body;
+    let { matchedData: { productName, oldPrice, newPrice, oldQuantity = 1, newQuantity = 1, productDescription, storePlaceId }  } = req.body;
 
     oldPrice = parseFloat(oldPrice);
     newPrice = parseFloat(newPrice);
@@ -64,8 +64,8 @@ class PostServiceController {
       oldQuantity,
       newQuantity,
       productDescription,
-      userId: id
-
+      userId: id,
+      storePlaceId
     }, res, files.priceTagImage[0].buffer, files.productImage[0].buffer);
   }
 }

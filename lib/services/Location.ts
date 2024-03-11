@@ -1,9 +1,22 @@
-import type { AddressComponent, PlaceDetailsRequest } from '@googlemaps/google-maps-services-js';
-import { PlaceType2 } from '@googlemaps/google-maps-services-js';
-import { Client, Language } from '@googlemaps/google-maps-services-js';
+import type {
+  AddressComponent,
+  DirectionsRequest,
+  PlaceDetailsRequest
+} from '@googlemaps/google-maps-services-js';
+import {
+  Client,
+  Language,
+  PlaceType2,
+  TravelMode,
+  UnitSystem
+} from '@googlemaps/google-maps-services-js';
 
-export class  LocationService {
+type userLocation = {
+  longitude: number,
+  latitude: number
+};
 
+export class LocationService {
   private static googleMapsClient = new Client();
 
   static async getPlaceDetails(placeId: string) {
@@ -51,7 +64,7 @@ export class  LocationService {
       };
     } catch (error) {
       console.error('getPlaceDetails-error', error);
-      throw  error;
+      throw error;
     }
   }
 
@@ -85,6 +98,36 @@ export class  LocationService {
       provinceShortName,
       provinceLongName,
     };
+  }
+
+  static async getStoreDistance(userLocation: userLocation, storeLocation: string) {
+    try {
+      const directionRequest: DirectionsRequest = {
+        params: {
+          key: process.env.GOOGLE_MAPS_ROUTES_API_KEY || '',
+          origin: {
+            longitude: userLocation.longitude,
+            latitude: userLocation.latitude
+          },
+          destination: `place_id:${storeLocation}`,
+          mode: TravelMode.walking,
+          language: Language.en,
+          units: UnitSystem.metric,
+          region: 'ca',
+        }
+      };
+      const response = await this.googleMapsClient.directions(directionRequest);
+
+      if (response.data.status !== 'OK')
+        throw new Error(`Directions request failed with status: ${response.data.status}`);
+
+
+      return response.data.routes[0].legs[0].distance.value;
+    } catch (error) {
+      console.error('getStoreDistance-error', error);
+      throw error;
+    }
+
   }
 }
 

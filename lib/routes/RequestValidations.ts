@@ -39,7 +39,13 @@ const newPost = () => {
       .optional()
       .escape()
       .isString()
-      .withMessage('Description must be valid')
+      .withMessage('Description must be valid'),
+    body('storePlaceId')
+      .trim()
+      .escape()
+      .isString()
+      .notEmpty()
+      .withMessage('Store PlaceId(Google maps Place Id) must be valid')
   ];
 };
 
