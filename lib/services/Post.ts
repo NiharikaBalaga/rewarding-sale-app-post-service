@@ -8,6 +8,7 @@ import { SQSService } from './SQS';
 import { PostStatus } from '../DB/Models/post-status.enum';
 import { PostDLLService } from './PostDLL';
 import { SNSService } from './SNS';
+import { LocationService } from './Location';
 
 
 class PostService {
@@ -75,13 +76,22 @@ class PostService {
     return failedPost;
   }
 
-  static async postDeclined(postId: mongoose.Types.ObjectId, declinedReason: string, validProductName: string, postCategory: string) {
+  static async postDeclined(postId: mongoose.Types.ObjectId, declinedReason: string, validProductName: string, postCategory: string, postStorePlaceId: string) {
+    const { address, url, name, postalCode, countryShortName, countryLongName, provinceShortName, provinceLongName } = await LocationService.getPlaceDetails(postStorePlaceId);
     const declinedPost = await  this._update(postId, {
       status: PostStatus.failed,
       postDeclinedReason: declinedReason,
       isActive: false,
       productName: validProductName,
       postCategory,
+      storeAddress: address,
+      storeUrl: url,
+      storeName: name,
+      storePostalCode: postalCode || '',
+      storeCountryShortName: countryShortName || '',
+      storeCountryLongName: countryLongName || '',
+      storeProvinceShortName: provinceShortName || '',
+      storeProvinceLongName: provinceLongName || '',
     });
 
     if (declinedPost) {
@@ -91,12 +101,21 @@ class PostService {
     return declinedPost;
   }
 
-  static async publishPost(postId: mongoose.Types.ObjectId, validProductName: string, postCategory: string) {
+  static async publishPost(postId: mongoose.Types.ObjectId, validProductName: string, postCategory: string, postStorePlaceId: string) {
+    const { address, url, name, postalCode, countryShortName, countryLongName, provinceShortName, provinceLongName } = await LocationService.getPlaceDetails(postStorePlaceId);
     const publishPost = await this._update(postId, {
       status: PostStatus.published,
       productName: validProductName,
       isActive: true,
-      postCategory
+      postCategory,
+      storeAddress: address,
+      storeUrl: url,
+      storeName: name,
+      storePostalCode: postalCode || '',
+      storeCountryShortName: countryShortName || '',
+      storeCountryLongName: countryLongName || '',
+      storeProvinceShortName: provinceShortName || '',
+      storeProvinceLongName: provinceLongName || '',
     });
 
     if (publishPost) {
@@ -111,12 +130,21 @@ class PostService {
     return publishPost;
   }
 
-  static async duplicatePost(postId: mongoose.Types.ObjectId, validProductName: string, postCategory: string) {
+  static async duplicatePost(postId: mongoose.Types.ObjectId, validProductName: string, postCategory: string, postStorePlaceId: string) {
+    const { address, url, name, postalCode, countryShortName, countryLongName, provinceShortName, provinceLongName } = await LocationService.getPlaceDetails(postStorePlaceId);
     const duplicatePost = await this._update(postId, {
       status: PostStatus.duplicate,
       isActive: false,
       productName: validProductName,
       postCategory,
+      storeAddress: address,
+      storeUrl: url,
+      storeName: name,
+      storePostalCode: postalCode || '',
+      storeCountryShortName: countryShortName || '',
+      storeCountryLongName: countryLongName || '',
+      storeProvinceShortName: provinceShortName || '',
+      storeProvinceLongName: provinceLongName || '',
     });
 
     if (duplicatePost) {
@@ -130,11 +158,10 @@ class PostService {
     return duplicatePost;
   }
 
-  static async findDuplicatePost(productName: string) {
-    // TODO include location as well
-
+  static async findDuplicatePost(productName: string, storePlaceId: string) {
     const duplicatePostQuery = {
       productName,
+      storePlaceId,
       $or: [
         { status: PostStatus.created },
         { status: PostStatus.published },
@@ -171,7 +198,8 @@ class PostService {
         oldPrice: newPostData.oldPrice,
         newPrice: newPostData.newPrice,
         oldQuantity: newPostData.oldQuantity,
-        newQuantity: newPostData.newQuantity
+        newQuantity: newPostData.newQuantity,
+        storePlaceId: newPostData.storePlaceId
       });
 
       // SNS Event

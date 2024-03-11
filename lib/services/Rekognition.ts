@@ -1,12 +1,13 @@
 import type { DetectTextRequest, TextDetection } from '@aws-sdk/client-rekognition';
 import { DetectTextCommand } from '@aws-sdk/client-rekognition';
 import { RekognitionClient } from '@aws-sdk/client-rekognition';
-import process from 'process';
 import type mongoose from 'mongoose';
 import { PostService } from './Post';
 import { S3Servive } from './S3';
 import type { IPost } from '../DB/Models/Post';
 import { OpenAIService } from './OpenAI';
+import { UserService } from './User';
+import { LocationService } from './Location';
 
 class RekognitionService {
   private static readonly rekognitionUsEast1 = new RekognitionClient({
@@ -58,11 +59,11 @@ class RekognitionService {
               // it's a valid post
               if (!duplicatedPost) {
                 // it's not a duplicate post - Updated validatedProductName
-                await PostService.publishPost(postId, validProductName, postCat);
+                await PostService.publishPost(postId, validProductName, postCat, post.storePlaceId);
                 console.log(`Post Validation Success - not a duplicate post, Post is Live now, Valid PostName Updated`);
               } else {
                 // it's a duplicate post
-                await PostService.duplicatePost(postId, validProductName, postCat);
+                await PostService.duplicatePost(postId, validProductName, postCat, post.storePlaceId);
                 console.log(`Post Validation Success - But it's duplicate post`);
               }
             }
@@ -74,12 +75,10 @@ class RekognitionService {
           validPost = false;
           postDeclinedReason = 'Images Not Found';
         }
-      }
-
-
-      if (!validPost) {
-        console.log(`Validation Status:${validPost}, reason:${postDeclinedReason}`);
-        return PostService.postDeclined(postId, postDeclinedReason, productName, postCat);
+        if (!validPost) {
+          console.log(`Validation Status:${validPost}, reason:${postDeclinedReason}`);
+          return PostService.postDeclined(postId, postDeclinedReason, productName, postCat, post.storePlaceId);
+        }
       }
     } catch (error) {
       // if any error - make post status as failed
@@ -91,7 +90,23 @@ class RekognitionService {
 
   // This function returns  a post is valid or not after multiple validation in this pipeline
   private static async _postValidationPipeline(post: IPost) {
+    const MAX_STORE_DISTANCE = process.env.MAX_STORE_DISTANCE || 500;
     try {
+      console.log('Validation Pipeline, Location Check');
+
+      // Init step - Location verification
+
+      const user = await UserService.findById(post.userId);
+      if (user && user.lastLocation) {
+        const storeDistance = await LocationService.getStoreDistance({
+          longitude: user.lastLocation.coordinates[0],
+          latitude: user.lastLocation.coordinates[1]
+        }, post.storePlaceId);
+
+        if (storeDistance > parseInt(String(MAX_STORE_DISTANCE), 10))
+          return { validated: false, reason: `User and Store Location exceeded Max Store Location (${MAX_STORE_DISTANCE}) - ${storeDistance}` };
+      }
+
       let validOldPrice = false;
       let validNewPrice = false;
       let validOldQuantity = false;
@@ -142,8 +157,6 @@ class RekognitionService {
 
       console.log('Validation Pipeline, Valid Old and New Prices, Checking Product Name');
 
-      // TODO add location validation
-
       // Step - 2 Validate Product Name
       const validProductName = await this._isValidProductName(post) ;
       if (!validProductName) {
@@ -153,7 +166,7 @@ class RekognitionService {
 
 
       // Step-3 Check Duplicate Post
-      const duplicatedPost = await PostService.findDuplicatePost(validProductName);// TODO add location fields as well
+      const duplicatedPost = await PostService.findDuplicatePost(validProductName, post.storePlaceId);// TODO add location fields as well
 
 
       // step-4 Check if same user duplicate Post

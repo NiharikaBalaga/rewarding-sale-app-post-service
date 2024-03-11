@@ -1,5 +1,6 @@
 import UserModel from '../DB/Models/User';
 import UserTokenBlacklistModel from '../DB/Models/User-Token-Blacklist';
+import mongoose from 'mongoose';
 
 class UserService{
 
@@ -17,7 +18,7 @@ class UserService{
     }
   }
 
-  static async findById(id: string) {
+  static async findById(id: string | mongoose.Types.ObjectId) {
     return UserModel.findById(id);
   }
 

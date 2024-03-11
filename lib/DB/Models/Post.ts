@@ -21,7 +21,16 @@ export interface IPost extends Document {
   postDeclinedReason: string,
   postBlockedReason: string,
   postNotActiveReason: string,
-  postCategory: string
+  postCategory: string,
+  storePlaceId: string,
+  storeAddress: string,
+  storeUrl: string,
+  storeName: string,
+  storePostalCode: string,
+  storeCountryShortName: string,
+  storeCountryLongName: string,
+  storeProvinceShortName: string,
+  storeProvinceLongName: string,
 }
 
 const PostSchema: mongoose.Schema = new mongoose.Schema({
@@ -79,33 +88,33 @@ const PostSchema: mongoose.Schema = new mongoose.Schema({
   productName: {
     uppercase: true,
     type: String,
-    required: true // TODO Make is false if we use image processing
+    required: true
   },
 
   // TODO also make post inactive after 24 hours
   productDescription: {
     type: String,
-    required: false // TODO Make is false if we use image processing
+    required: false
   },
 
   oldPrice: {
     type: Number,
-    required: true // TODO Make is false if we use image processing
+    required: true
   },
 
   newPrice: {
     type: Number,
-    required: true // TODO Make is false if we use image processing
+    required: true
   },
 
   oldQuantity: {
     type: Number,
-    required: false // TODO Make is false if we use image processing
+    required: false
   },
 
   newQuantity: {
     type: Number,
-    required: false // TODO Make is false if we use image processing
+    required: false
   },
 
   postCategory: {
@@ -113,9 +122,52 @@ const PostSchema: mongoose.Schema = new mongoose.Schema({
     required: false,
     index: true,
     uppercase: true,
-  }
+  },
 
-  // TODO add location fields
+  storePlaceId: {
+    type: String,
+    required: true,
+  },
+
+  storeAddress: {
+    type: String,
+    required: false,
+  },
+
+  storeUrl: {
+    type: String,
+    required: false,
+  },
+
+  storeName: {
+    type: String,
+    required: false,
+  },
+
+  storePostalCode: {
+    type: String,
+    required: false,
+  },
+
+  storeCountryShortName: {
+    type: String,
+    required: false,
+  },
+
+  storeCountryLongName: {
+    type: String,
+    required: false,
+  },
+
+  storeProvinceShortName: {
+    type: String,
+    required: false,
+  },
+
+  storeProvinceLongName: {
+    type: String,
+    required: false,
+  }
 }, {
   collection: 'Posts',
   timestamps: true,
