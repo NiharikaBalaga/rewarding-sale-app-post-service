@@ -31,6 +31,11 @@ class PostServiceController {
     return PostService.deletePost(postId, req.user.userId, res);
   }
 
+  public static getAllPost(req: RequestInterferedByIsBlocked, res: Response) {
+    return PostService.getAllPost( res);
+}
+
+
   public static newPost(req: MulterRequest, res: Response) {
     console.log('newPost');
     const { files } = req;

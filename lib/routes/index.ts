@@ -20,6 +20,7 @@ function getRouter() {
     fileFilter: new ImageFileFilter().fileFilter.bind(new ImageFileFilter())
   });
 
+  router.get('/allpost',[passport.authenticate('jwt-access', { session: false }), isBlocked, tokenBlacklist, validateErrors, PostServiceController.getAllPost]);
   // @ts-ignore
   router.post('', [passport.authenticate('jwt-access', { session: false }), isBlocked, tokenBlacklist, uploadImage.fields([{ name: 'priceTagImage', maxCount: 1 }, { name: 'productImage', maxCount: 1 }]), newPost(), validateErrors, PostServiceController.newPost]);
 

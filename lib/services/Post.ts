@@ -56,6 +56,44 @@ class PostService {
 
   }
 
+  static async getAllPost(res: Response) {
+    try {
+        // Fetch all posts from the database
+        const posts = await PostModel.find({ status: 'POST_PUBLISHED' });
+
+        if (!posts || posts.length === 0) {
+            return res.status(httpCodes.notFound).send({ message: 'No published posts found' });
+        }
+        
+        return res.status(httpCodes.ok).send({
+            data: posts,
+            status: httpCodes.ok
+        });
+    } catch (error) {
+        console.error('Error fetching posts:', error);
+        return res.status(httpCodes.serverError).send({ message: 'An error occurred while fetching posts' });
+    }
+}
+
+
+// public static async getAllPost() {
+//   try {
+//       // Fetch all posts from the database using PostService
+//       const posts = await PostService.getAllPost();
+
+//       // Check if any posts were found
+//       if (!posts || posts.length === 0) {
+//           return { status: httpCodes.notFound, message: 'No posts found' };
+//       }
+
+//       // Return the retrieved posts
+//       return { status: httpCodes.ok, data: posts };
+//   } catch (error) {
+//       console.error('Error fetching posts:', error);
+//       return { status: httpCodes.serverError, message: 'An error occurred while fetching posts' };
+//   }
+// }
+
 
   static async getPost(postId: mongoose.Types.ObjectId) {
     return PostModel.findById(postId);
