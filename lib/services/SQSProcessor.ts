@@ -2,6 +2,7 @@ import { Events } from './events.enum';
 import { UserService } from './User';
 import type mongoose from 'mongoose';
 import { RekognitionService } from './Rekognition';
+import { PostService } from './Post';
 
 class SQSProcessorService {
   static async ProcessSqsMessage(messages: any[]) {
@@ -64,9 +65,9 @@ class SQSProcessorService {
   }
 
   private static async _handleMessageEventsSentBySNS(parsedMessage: any) {
-    const { EVENT_TYPE, user, userId, token, updatedUser } =
+    const { EVENT_TYPE, user, userId, token, updatedUser, postId } =
       parsedMessage;
-    console.log(EVENT_TYPE, user, userId, token, updatedUser);
+    console.log(EVENT_TYPE, user, userId, token, updatedUser, postId);
     switch (EVENT_TYPE) {
       case Events.userCreatedByPhone:
         return this._handleUserCreationByPhone(user, userId);
@@ -74,6 +75,8 @@ class SQSProcessorService {
         return this._handleTokenBlackListEvent(token);
       case Events.userUpdate:
         return this._handleUserUpdatedEvent(updatedUser, userId);
+      case Events.blockPost:
+        return this._handleBlockPostByDecision(postId);
       default:
         console.warn(`Unhandled event type: ${EVENT_TYPE}`);
         break;
@@ -82,6 +85,7 @@ class SQSProcessorService {
   private static async _handleUserCreationByPhone(user: any, userId: string) {
     try {
       await UserService.createUserByPhone(user, userId);
+      return true;
     } catch (error) {
       console.error('_handleUserCreationByPhone-error', error);
       throw error;
@@ -91,6 +95,7 @@ class SQSProcessorService {
   private static async _handleTokenBlackListEvent(token: string) {
     try {
       await UserService.addTokenInBlackList(token);
+      return true;
     } catch (error){
       console.error('_handleTokenBlackListEvent_error', error);
       throw error;
@@ -100,6 +105,7 @@ class SQSProcessorService {
   private static async _handleUserUpdatedEvent(user: any, userId: string) {
     try {
       await UserService.updateUser(userId, user);
+      return true;
     } catch (error){
       console.error('_handleUserUpdatedEvent', error);
       throw error;
@@ -109,8 +115,18 @@ class SQSProcessorService {
   private static async _handleNewPost(postId: mongoose.Types.ObjectId) {
     try {
       await RekognitionService.newPost(postId);
+      return true;
     } catch (error) {
       console.error('_handleNewPost-error', error);
+    }
+  }
+
+  private static async _handleBlockPostByDecision(postId: mongoose.Types.ObjectId) {
+    try {
+      await PostService.blockPost(postId);
+      return true;
+    } catch (error) {
+      console.error('_handleBlockPostByDecision-error', error);
     }
   }
 }

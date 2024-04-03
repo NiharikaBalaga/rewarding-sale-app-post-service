@@ -1,0 +1,9 @@
+### Get All posts
+GET http://localhost:3001/api/post/allpost
+content-type: application/json
+Authorization:Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2NjBkODgzMGI0MGRjZTVhMzkzZjdkODEiLCJwaG9uZU51bWJlciI6IjQzNy01NTYtNDAzNSIsImlhdCI6MTcxMjE2Mjg2NCwiZXhwIjoxNzE0NzU0ODY0fQ.AabwUXFWnA2xcL29M31MfYfkT4A7PrZh01b3_OdJ_cs
+
+### Get A post
+GET http://localhost:3001/api/post/post/660d88c461b87eb61c12630a
+content-type: application/json
+Authorization:Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2NjBkODgzMGI0MGRjZTVhMzkzZjdkODEiLCJwaG9uZU51bWJlciI6IjQzNy01NTYtNDAzNSIsImlhdCI6MTcxMjE2Mjg2NCwiZXhwIjoxNzE0NzU0ODY0fQ.AabwUXFWnA2xcL29M31MfYfkT4A7PrZh01b3_OdJ_cs

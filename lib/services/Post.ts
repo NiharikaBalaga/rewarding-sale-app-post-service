@@ -58,45 +58,35 @@ class PostService {
 
   static async getAllPost(res: Response) {
     try {
-        // Fetch all posts from the database
-        const posts = await PostModel.find({ status: 'POST_PUBLISHED' });
+      // Fetch all posts from the database
+      const posts = await PostModel.find({ status: PostStatus.published });
 
-        if (!posts || posts.length === 0) {
-            return res.status(httpCodes.notFound).send({ message: 'No published posts found' });
-        }
-        
-        return res.status(httpCodes.ok).send({
-            data: posts,
-            status: httpCodes.ok
-        });
+      if (!posts || posts.length === 0)
+        return res.status(httpCodes.notFound).send({ message: 'No published posts found' });
+
+      return res.status(httpCodes.ok).send({
+        data: posts,
+        status: httpCodes.ok
+      });
     } catch (error) {
-        console.error('Error fetching posts:', error);
-        return res.status(httpCodes.serverError).send({ message: 'An error occurred while fetching posts' });
+      console.error('Error fetching posts:', error);
+      return res.status(httpCodes.serverError).send({ message: 'An error occurred while fetching posts' });
     }
-}
+  }
 
-
-// public static async getAllPost() {
-//   try {
-//       // Fetch all posts from the database using PostService
-//       const posts = await PostService.getAllPost();
-
-//       // Check if any posts were found
-//       if (!posts || posts.length === 0) {
-//           return { status: httpCodes.notFound, message: 'No posts found' };
-//       }
-
-//       // Return the retrieved posts
-//       return { status: httpCodes.ok, data: posts };
-//   } catch (error) {
-//       console.error('Error fetching posts:', error);
-//       return { status: httpCodes.serverError, message: 'An error occurred while fetching posts' };
-//   }
-// }
-
-
-  static async getPost(postId: mongoose.Types.ObjectId) {
+  static async getPost(postId: mongoose.Types.ObjectId | string) {
     return PostModel.findById(postId);
+  }
+
+  static async getPostByUser(postId: mongoose.Types.ObjectId | string, userId: mongoose.Types.ObjectId, res: Response) {
+    const post = await this.getPost(postId);
+
+    if (post) {
+      // SNS event
+      SNSService.postView(post, userId);
+    }
+
+    return res.status(httpCodes.ok).send(post);
   }
 
 
@@ -256,6 +246,22 @@ class PostService {
       console.error('createNewPost-error', error);
       return res.status(httpCodes.serverError).send('Server Error, Please try again later');
     }
+  }
+
+  static async blockPost(postId: mongoose.Types.ObjectId) {
+    const updatePostAsBlocked = await this._update(postId, {
+      isActive: false,
+      postBlockedReason: 'Post Blocked due to more number of reports',
+      status: PostStatus.blocked
+    });
+
+    // TODO what happens to all the posts in DLL chain
+
+    if (updatePostAsBlocked) {
+      // SNS Event
+      await SNSService.userPostUpdate(updatePostAsBlocked);
+    }
+    return updatePostAsBlocked;
   }
 }
 

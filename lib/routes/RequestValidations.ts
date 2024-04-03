@@ -1,4 +1,4 @@
-import { body, matchedData, validationResult } from 'express-validator';
+import { body, matchedData, param, validationResult } from 'express-validator';
 import type { NextFunction, Request, Response } from 'express';
 import { httpCodes } from '../constants/http-status-code';
 
@@ -58,6 +58,17 @@ const deletePost = () => {
   ];
 };
 
+
+const postIdPathParam = () => {
+  return [
+    param('postId')
+      .trim()
+      .notEmpty()
+      .isMongoId()
+      .withMessage('Must be a Valid Psot Id')
+  ];
+};
+
 const validateErrors = (req: Request, res: Response, next: NextFunction) => {
   const errors = validationResult(req);
   if (errors.isEmpty()) {
@@ -72,4 +83,4 @@ const validateErrors = (req: Request, res: Response, next: NextFunction) => {
   });
 };
 
-export { newPost, validateErrors, deletePost };
+export { newPost, validateErrors, deletePost, postIdPathParam };
