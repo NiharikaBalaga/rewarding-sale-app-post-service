@@ -256,6 +256,7 @@ class PostService {
     });
 
     // TODO what happens to all the posts in DLL chain
+    // Call similar function like DEL POST
 
     if (updatePostAsBlocked) {
       // SNS Event
