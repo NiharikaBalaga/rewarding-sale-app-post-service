@@ -2,6 +2,7 @@ import { PublishCommand, SNSClient } from '@aws-sdk/client-sns';
 import type { IPost } from '../DB/Models/Post';
 import { Events } from './events.enum';
 import type { IPostDLL } from '../DB/Models/Post-DLL';
+import mongoose from 'mongoose';
 
 
 class SNSService {
@@ -71,6 +72,13 @@ class SNSService {
   static async postDLLDelete(deletedPostDLL: IPostDLL) {
     const EVENT_TYPE = Events.postDLLDelete;
     const snsMessage = Object.assign({ deletedPostDLL }, { EVENT_TYPE, postDLLId: deletedPostDLL.id });
+    console.log(`Publishing ${EVENT_TYPE} to Post Topic`);
+    return this._publishToPostTopicARN(JSON.stringify(snsMessage));
+  }
+
+  static async postView(post: IPost, userId: mongoose.Types.ObjectId | string) {
+    const EVENT_TYPE = Events.postView;
+    const snsMessage = Object.assign({ post }, { EVENT_TYPE, postId: post.id, viewedBy: userId });
     console.log(`Publishing ${EVENT_TYPE} to Post Topic`);
     return this._publishToPostTopicARN(JSON.stringify(snsMessage));
   }

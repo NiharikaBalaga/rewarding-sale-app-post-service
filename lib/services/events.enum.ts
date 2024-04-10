@@ -8,5 +8,7 @@ export enum Events {
   userPostDelete = 'USER_POST_DELETE',
   postDLLNewNode = 'POST_DLL_NEW_NODE',
   postDLLUpdate = 'POST_DLL_UPDATE',
-  postDLLDelete = 'POST_DLL_DELETE'
+  postDLLDelete = 'POST_DLL_DELETE',
+  postView =  'POST_VIEW',
+  blockPost = 'DECISION_BLOCK_POST',
 }

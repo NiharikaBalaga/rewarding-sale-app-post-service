@@ -24,6 +24,7 @@ interface MulterRequest extends RequestInterferedByIsBlocked {
     productImage: Express.Multer.File[],
   }
 }
+
 class PostServiceController {
 
   public static deletePost(req: RequestInterferedByIsBlocked, res: Response) {
@@ -32,8 +33,15 @@ class PostServiceController {
   }
 
   public static getAllPost(req: RequestInterferedByIsBlocked, res: Response) {
-    return PostService.getAllPost( res);
-}
+    return PostService.getAllPost(res);
+  }
+
+  public static getPost(req: RequestInterferedByIsBlocked, res: Response) {
+    const { postId } = req.params;
+    const { id: userId } = req.currentUser;
+
+    return PostService.getPostByUser(postId, userId, res);
+  }
 
 
   public static newPost(req: MulterRequest, res: Response) {
@@ -43,9 +51,19 @@ class PostServiceController {
       return res.status(httpCodes.badRequest).send('Both priceTage and ProductImage are required');
 
 
-    const { id }  = req.currentUser;
+    const { id } = req.currentUser;
     // eslint-disable-next-line prefer-const
-    let { matchedData: { productName, oldPrice, newPrice, oldQuantity = 1, newQuantity = 1, productDescription, storePlaceId }  } = req.body;
+    let {
+      matchedData: {
+        productName,
+        oldPrice,
+        newPrice,
+        oldQuantity = 1,
+        newQuantity = 1,
+        productDescription,
+        storePlaceId
+      }
+    } = req.body;
 
     oldPrice = parseFloat(oldPrice);
     newPrice = parseFloat(newPrice);
@@ -55,7 +73,7 @@ class PostServiceController {
     // both old price - new price and old quantity and new quantity can't be same
     if (newPrice === oldPrice && newQuantity === oldQuantity) {
       // this is invalid request
-      return  res.status(httpCodes.badRequest).send('Invalid Request, both newPrice, oldPrice and newQuantity and oldQuantity cannot be equal');
+      return res.status(httpCodes.badRequest).send('Invalid Request, both newPrice, oldPrice and newQuantity and oldQuantity cannot be equal');
     }
 
     if (newPrice >= oldPrice && newQuantity <= oldQuantity)
@@ -75,6 +93,6 @@ class PostServiceController {
   }
 }
 
-export  {
+export {
   PostServiceController
 };
