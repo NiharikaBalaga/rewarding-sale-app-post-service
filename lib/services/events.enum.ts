@@ -11,4 +11,5 @@ export enum Events {
   postDLLDelete = 'POST_DLL_DELETE',
   postView =  'POST_VIEW',
   blockPost = 'DECISION_BLOCK_POST',
+  postUpdated = 'POST_UPDATED',
 }

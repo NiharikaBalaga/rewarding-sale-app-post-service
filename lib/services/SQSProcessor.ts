@@ -3,6 +3,7 @@ import { UserService } from './User';
 import type mongoose from 'mongoose';
 import { RekognitionService } from './Rekognition';
 import { PostService } from './Post';
+import { IPost } from '../DB/Models/Post';
 
 class SQSProcessorService {
   static async ProcessSqsMessage(messages: any[]) {
@@ -65,9 +66,9 @@ class SQSProcessorService {
   }
 
   private static async _handleMessageEventsSentBySNS(parsedMessage: any) {
-    const { EVENT_TYPE, user, userId, token, updatedUser, postId } =
+    const { EVENT_TYPE, user, userId, token, updatedUser, postId, post } =
       parsedMessage;
-    console.log(EVENT_TYPE, user, userId, token, updatedUser, postId);
+    console.log(EVENT_TYPE, user, userId, token, updatedUser, postId, post);
     switch (EVENT_TYPE) {
       case Events.userCreatedByPhone:
         return this._handleUserCreationByPhone(user, userId);
@@ -77,11 +78,23 @@ class SQSProcessorService {
         return this._handleUserUpdatedEvent(updatedUser, userId);
       case Events.blockPost:
         return this._handleBlockPostByDecision(postId);
+      case Events.postUpdated:
+        return this._handlePostUpdate(post, postId);
       default:
         console.warn(`Unhandled event type: ${EVENT_TYPE}`);
         break;
     }
   }
+
+  private static async _handlePostUpdate(post: IPost, postId: string) {
+    try {
+      await PostService.updatePostAdminSNS(post, postId);
+    } catch (error) {
+      console.error('_handleUserCreationByPhone-error', error);
+      throw error;
+    }
+  }
+
   private static async _handleUserCreationByPhone(user: any, userId: string) {
     try {
       await UserService.createUserByPhone(user, userId);
