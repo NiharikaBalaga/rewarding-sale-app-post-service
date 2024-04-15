@@ -264,6 +264,22 @@ class PostService {
     }
     return updatePostAsBlocked;
   }
+
+  static async updatePostAdminSNS(post: Partial<IPost>, postId: string) {
+    const objectId = new mongoose.Types.ObjectId(postId);
+    const updatedPost = await this._update(objectId, {
+      ...post
+    });
+
+    // TODO what happens to all the posts in DLL chain
+    // Call similar function like DEL POST
+
+    if (updatedPost) {
+      // SNS Event
+      await SNSService.userPostUpdate(updatedPost);
+    }
+    return updatedPost;
+  }
 }
 
 export {
