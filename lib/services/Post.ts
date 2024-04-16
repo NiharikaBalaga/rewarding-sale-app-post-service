@@ -239,7 +239,8 @@ class PostService {
 
       return res.send({
         message: 'Post Created Successfully',
-        status: PostStatus.created
+        status: PostStatus.created,
+        postId: postId.toString()
       });
     } catch (error) {
       // TODO handle any failure
