@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
+    "outDir": "dist",
     "target": "ES2019",
     "module": "commonjs",
     "lib": ["esnext", "dom", "DOM.Iterable"],
@@ -9,7 +10,6 @@
     "allowJs": true,
     "jsx": "react",
     "resolveJsonModule": true,
-    "noEmit": true,
     "noImplicitOverride": true,
     "useUnknownInCatchVariables": false,
     "strictPropertyInitialization": false,

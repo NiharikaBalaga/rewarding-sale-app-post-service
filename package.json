@@ -4,7 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start:prod": "cross-env NODE_ENV=production ts-node lib/app.ts",
+    "build": "tsc",
+    "start:prod": "node dist/app.js",
     "start:dev": "cross-env NODE_ENV=development ts-node-dev lib/app.ts",
     "lint": "eslint --ext .ts --ext .js --ext .jsx . --max-warnings 0",
     "lint:fix": "eslint --ext .ts --ext .js . --fix"
